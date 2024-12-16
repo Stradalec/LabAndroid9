@@ -16,15 +16,18 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
+import java.io.Serializable
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var adapter: ForecastAdapter
+    private var forecastData: List<ForecastItem>? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
         val recyclerView: RecyclerView = findViewById(R.id.rView)
-        var adapter: ForecastAdapter = ForecastAdapter(ForecastDiffCallback())
+        adapter= ForecastAdapter(ForecastDiffCallback())
 
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -61,6 +64,21 @@ class MainActivity : AppCompatActivity() {
             override fun onFailure(call: retrofit2.Call<Forecast>, t: Throwable) {
             }
         })
+    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (forecastData != null) {
+            outState.putSerializable("forecastData", forecastData as Serializable)
+        }
+
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        forecastData = savedInstanceState?.getSerializable("forecastData") as? List<ForecastItem>
+
+
+        adapter.submitList(forecastData)
     }
 }
 

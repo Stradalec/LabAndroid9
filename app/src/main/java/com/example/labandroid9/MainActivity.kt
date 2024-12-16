@@ -25,45 +25,50 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-
+        val weatherStore = WeatherStore()
         val recyclerView: RecyclerView = findViewById(R.id.rView)
         adapter= ForecastAdapter(ForecastDiffCallback())
 
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
+        if (weatherStore.weathers != null) {
+            adapter.submitList(weatherStore.weathers)
+        } else {
+            val retrofit = Retrofit.Builder()
+                .baseUrl("https://api.openweathermap.org/data/2.5/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
 
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.openweathermap.org/data/2.5/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+            val service = retrofit.create(OpenWeatherMapService::class.java)
 
-        val service = retrofit.create(OpenWeatherMapService::class.java)
+            val apiKey = resources.getString(R.string.key)
+            val city = "Шклов"
+            val units = "metric"
 
-        val apiKey = resources.getString(R.string.key)
-        val city = "Шклов"
-        val units = "metric"
+            val call = service.getForecast(city, units, apiKey)
 
-        val call = service.getForecast(city, units, apiKey)
-
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
+            val toolbar = findViewById<Toolbar>(R.id.toolbar)
+            setSupportActionBar(toolbar)
 
 
-        call.enqueue(object : Callback<Forecast> {
-            override fun onResponse(call: retrofit2.Call<Forecast>, response: Response<Forecast>) {
-                if (response.isSuccessful) {
-                    val forecast = response.body()
-                    adapter.submitList(forecast!!.list)
+            call.enqueue(object : Callback<Forecast> {
+                override fun onResponse(call: retrofit2.Call<Forecast>, response: Response<Forecast>) {
+                    if (response.isSuccessful) {
+                        val forecast = response.body()
+                        weatherStore.weathers = forecast!!.list
+                        adapter.submitList(forecast!!.list)
+                    }
+                    else
+                    {
+
+                    }
                 }
-                else
-                {
 
+                override fun onFailure(call: retrofit2.Call<Forecast>, t: Throwable) {
                 }
-            }
+            })
+        }
 
-            override fun onFailure(call: retrofit2.Call<Forecast>, t: Throwable) {
-            }
-        })
     }
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)

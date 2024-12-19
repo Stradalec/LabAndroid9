@@ -55,12 +55,10 @@ class MainActivity : AppCompatActivity() {
                 override fun onResponse(call: retrofit2.Call<Forecast>, response: Response<Forecast>) {
                     if (response.isSuccessful) {
                         val forecast = response.body()
-                        weatherStore.weathers = forecast!!.list
-                        adapter.submitList(forecast!!.list)
-                    }
-                    else
-                    {
-
+                        forecast?.apply {
+                            weatherStore.weathers = list
+                            adapter.submitList(list)
+                        }
                     }
                 }
 
